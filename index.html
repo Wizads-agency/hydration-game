@@ -26,7 +26,10 @@
       text-align: center;
     }
 
-    h1 { color: #1565c0; }
+    h1 {
+      color: #1565c0;
+      margin-bottom: 10px;
+    }
 
     input {
       width: 100%;
@@ -38,7 +41,7 @@
     }
 
     button {
-      margin-top: 14px;
+      margin-top: 12px;
       padding: 12px;
       width: 100%;
       border-radius: 16px;
@@ -50,7 +53,9 @@
       cursor: pointer;
     }
 
-    #game { display: none; }
+    .secondary {
+      background: #90a4ae;
+    }
 
     .progress-container {
       width: 100%;
@@ -66,21 +71,37 @@
       width: 0%;
       background: linear-gradient(90deg, #42a5f5, #1e88e5);
     }
+
+    .leaderboard {
+      text-align: left;
+      margin-top: 16px;
+    }
+
+    .leaderboard h3 {
+      text-align: center;
+    }
+
+    .player {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- NAME SCREEN -->
+  <!-- LOGIN -->
   <div class="app" id="login">
     <h1>💧 Hydration Game</h1>
-    <p>Enter your name to start</p>
+    <p>Enter your name</p>
     <input id="usernameInput" placeholder="Your name">
     <button onclick="startGame()">Start</button>
   </div>
 
-  <!-- GAME SCREEN -->
-  <div class="app" id="game">
+  <!-- GAME -->
+  <div class="app" id="game" style="display:none">
     <h1 id="welcome"></h1>
 
     <div class="progress-container">
@@ -92,50 +113,92 @@
     <button onclick="drink(250)">🥛 250 ml</button>
     <button onclick="drink(500)">🧃 500 ml</button>
     <button onclick="drink(1000)">🍼 1 L</button>
+
+    <button class="secondary" onclick="showLeaderboard()">🏆 Leaderboard</button>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="app" id="leaderboard" style="display:none">
+    <h1>🏆 Leaderboard</h1>
+    <div class="leaderboard" id="leaderboardList"></div>
+    <button class="secondary" onclick="backToGame()">⬅ Back</button>
   </div>
 
   <script>
-    let user = localStorage.getItem("currentUser");
-    let goal = 2000;
-    let totalDrank = 0;
-
-    if (user) loadUser();
+    const goal = 2000;
+    let currentUser = null;
+    let users = JSON.parse(localStorage.getItem("users")) || {};
 
     function startGame() {
       const name = document.getElementById("usernameInput").value.trim();
       if (!name) return alert("Enter your name");
 
-      localStorage.setItem("currentUser", name);
-      user = name;
-      loadUser();
+      currentUser = name;
+
+      if (!users[name]) {
+        users[name] = { points: 0, water: 0 };
+      }
+
+      saveUsers();
+      loadGame();
     }
 
-    function loadUser() {
+    function loadGame() {
       document.getElementById("login").style.display = "none";
+      document.getElementById("leaderboard").style.display = "none";
       document.getElementById("game").style.display = "block";
-      document.getElementById("welcome").innerText = "Hi, " + user + " 👋";
 
-      totalDrank = Number(localStorage.getItem("hydration_" + user)) || 0;
+      document.getElementById("welcome").innerText = "Hi, " + currentUser + " 👋";
       updateUI();
     }
 
     function drink(amount) {
-      totalDrank += amount;
-      if (totalDrank > goal) totalDrank = goal;
+      let user = users[currentUser];
+      user.water += amount;
+      if (user.water > goal) user.water = goal;
 
-      localStorage.setItem("hydration_" + user, totalDrank);
+      user.points += amount / 250;
+      saveUsers();
       updateUI();
     }
 
     function updateUI() {
+      let user = users[currentUser];
+      let percent = (user.water / goal) * 100;
+
+      document.getElementById("progress-bar").style.width = percent + "%";
       document.getElementById("status").innerText =
-        totalDrank + " / " + goal + " ml";
-      document.getElementById("progress-bar").style.width =
-        (totalDrank / goal) * 100 + "%";
+        user.water + " / " + goal + " ml";
+    }
+
+    function showLeaderboard() {
+      document.getElementById("game").style.display = "none";
+      document.getElementById("leaderboard").style.display = "block";
+
+      let list = Object.entries(users)
+        .sort((a, b) => b[1].points - a[1].points);
+
+      let html = "";
+      list.forEach((player, index) => {
+        html += `
+          <div class="player">
+            <span>${index + 1}. ${player[0]}</span>
+            <span>${player[1].points} pts</span>
+          </div>
+        `;
+      });
+
+      document.getElementById("leaderboardList").innerHTML = html;
+    }
+
+    function backToGame() {
+      loadGame();
+    }
+
+    function saveUsers() {
+      localStorage.setItem("users", JSON.stringify(users));
     }
   </script>
 
 </body>
 </html>
-
-

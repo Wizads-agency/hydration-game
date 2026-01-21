@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hydration Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(180deg, #e3f2fd, #bbdefb);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+
+    .app {
+      background: white;
+      width: 100%;
+      max-width: 380px;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h1 { color: #1565c0; }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      margin-top: 12px;
+    }
+
+    button {
+      margin-top: 14px;
+      padding: 12px;
+      width: 100%;
+      border-radius: 16px;
+      border: none;
+      background: #1976d2;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #game { display: none; }
+
+    .progress-container {
+      width: 100%;
+      height: 26px;
+      background: #e3f2fd;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #42a5f5, #1e88e5);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAME SCREEN -->
+  <div class="app" id="login">
+    <h1>💧 Hydration Game</h1>
+    <p>Enter your name to start</p>
+    <input id="usernameInput" placeholder="Your name">
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="app" id="game">
+    <h1 id="welcome"></h1>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div id="status">0 / 2000 ml</div>
+
+    <button onclick="drink(250)">🥛 250 ml</button>
+    <button onclick="drink(500)">🧃 500 ml</button>
+    <button onclick="drink(1000)">🍼 1 L</button>
+  </div>
+
+  <script>
+    let user = localStorage.getItem("currentUser");
+    let goal = 2000;
+    let totalDrank = 0;
+
+    if (user) loadUser();
+
+    function startGame() {
+      const name = document.getElementById("usernameInput").value.trim();
+      if (!name) return alert("Enter your name");
+
+      localStorage.setItem("currentUser", name);
+      user = name;
+      loadUser();
+    }
+
+    function loadUser() {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      document.getElementById("welcome").innerText = "Hi, " + user + " 👋";
+
+      totalDrank = Number(localStorage.getItem("hydration_" + user)) || 0;
+      updateUI();
+    }
+
+    function drink(amount) {
+      totalDrank += amount;
+      if (totalDrank > goal) totalDrank = goal;
+
+      localStorage.setItem("hydration_" + user, totalDrank);
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("status").innerText =
+        totalDrank + " / " + goal + " ml";
+      document.getElementById("progress-bar").style.width =
+        (totalDrank / goal) * 100 + "%";
+    }
+  </script>
+
+</body>
+</html>
+
+
